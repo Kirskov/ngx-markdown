@@ -6,6 +6,7 @@ import { MarkedKatexOptions } from './katex-options';
 import { MarkdownService, ParseOptions, RenderOptions } from './markdown.service';
 import { MermaidAPI } from './mermaid-options';
 import { PrismPlugin } from './prism-plugin';
+import { trustedHtml } from './trusted-html';
 
 @Component({
   // eslint-disable-next-line @angular-eslint/component-selector
@@ -167,7 +168,10 @@ export class MarkdownComponent implements OnChanges, AfterViewInit, OnDestroy {
 
     const parsed = await this.markdownService.parse(markdown, parsedOptions);
 
-    this.element.nativeElement.innerHTML = parsed;
+    // `parsed` is sanitized, but `DomSanitizer.sanitize()` returns a plain
+    // string, which pages enforcing `require-trusted-types-for 'script'`
+    // refuse to accept as an `innerHTML` value
+    this.element.nativeElement.innerHTML = trustedHtml(parsed);
 
     this.handlePlugins();
 

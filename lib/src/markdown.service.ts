@@ -13,6 +13,7 @@ import { MARKED_OPTIONS, MarkedOptions } from './marked-options';
 import { MarkedRenderer } from './marked-renderer';
 import { MERMAID_OPTIONS, MermaidAPI } from './mermaid-options';
 import { isSanitizeFunction, SANITIZE } from './sanitize-options';
+import { trustedHtml } from './trusted-html';
 
 // clipboard
 declare let ClipboardJS: {
@@ -237,7 +238,12 @@ export class MarkdownService {
       return html;
     }
     const textarea = document.createElement('textarea');
-    textarea.innerHTML = html;
+    // `html` is not sanitized yet at this point, but a detached `<textarea>` is
+    // an RCDATA element: its content is parsed as a single text node, no child
+    // element is ever created and no handler can run. Only `textarea.value` is
+    // read, which is why marking the markup trusted here cannot execute script.
+    // `textContent` is not an option, as it would not decode the entities.
+    textarea.innerHTML = trustedHtml(html);
     return textarea.value;
   }
 

@@ -13,3 +13,4 @@ export * from './mermaid-options';
 export * from './prism-plugin';
 export * from './provide-markdown';
 export * from './sanitize-options';
+export * from './trusted-html';

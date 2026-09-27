@@ -604,6 +604,30 @@ You can bypass sanitization using the markdown component, directive or pipe usin
 <div [innerHTML]="markdown | markdown : { disableSanitizer: true } | async"></div>
 ```
 
+#### Trusted Types
+
+Rendering markdown requires assigning HTML to the DOM, which browsers block on pages that enforce the [Trusted Types](https://developer.mozilla.org/docs/Web/API/Trusted_Types_API) CSP directive `require-trusted-types-for 'script'`:
+
+```
+ERROR TypeError: Failed to set the 'innerHTML' property on 'Element': This document requires 'TrustedHTML' assignment.
+```
+
+To support those pages, the library creates a Trusted Types policy named `ngx-markdown` the first time it renders. Nothing is required when the `trusted-types` directive is absent, as any policy name is then allowed.
+
+If your CSP restricts policy names with the `trusted-types` directive, you have to allow `ngx-markdown`, otherwise the policy cannot be created and the assignment still fails:
+
+```
+Content-Security-Policy: require-trusted-types-for 'script'; trusted-types angular ngx-markdown
+```
+
+The policy name is exported as a constant so it does not have to be hardcoded when a CSP is built programmatically:
+
+```typescript
+import { NGX_MARKDOWN_TRUSTED_TYPES_POLICY } from 'ngx-markdown';
+```
+
+> :warning: Trusted Types are about *where* HTML may come from, not about whether it is safe. The policy marks the markup the library already produced as trusted and performs no sanitization of its own, so it neither replaces nor weakens the [sanitization](#sanitization) described above.
+
 #### MarkedOptions
 
 Optionally, markdown parsing can be configured using [MarkedOptions](https://marked.js.org/#/USING_ADVANCED.md#options) that can be provided with the `MARKED_OPTIONS` injection token via the `markedOptions` property when configuring `provideMarkdown`.
