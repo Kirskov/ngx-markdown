@@ -264,8 +264,14 @@ export class MarkdownService {
       return renderer;
     }
 
-    // Hide the optional peer specifier from Vite import-analysis (see #681).
-    this.markedKatex ??= await import(/* @vite-ignore */ 'marked-katex-extension')
+    // Hide the optional peer specifier from Vite import-analysis (see #681, #694).
+    // The specifier *has to* go through a variable: Vite only skips resolution
+    // for a non-literal import, and `@vite-ignore` alone does not stop it from
+    // failing the build on a literal string. Inlining this constant makes `ng
+    // serve` return a 500 for applications that do not install KaTeX, as the
+    // `catch` below runs too late to handle a transform-time resolution error.
+    const markedKatexSpecifier = 'marked-katex-extension';
+    this.markedKatex ??= await import(/* @vite-ignore */ markedKatexSpecifier)
       .then((module: { default: MarkedKatexExtension }) => module.default)
       .catch(() => null);
 
